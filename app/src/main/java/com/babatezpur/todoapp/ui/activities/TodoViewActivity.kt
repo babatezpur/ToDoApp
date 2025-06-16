@@ -9,4 +9,5 @@ class TodoViewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_todo_view)
     }
+
 }
