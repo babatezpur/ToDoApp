@@ -13,8 +13,11 @@
         android:theme="@style/Theme.ToDOApp"
         tools:targetApi="31">
         <activity
+            android:name=".ui.activities.AddTodoActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.activities.TodoViewActivity"
-            android:exported="true" >
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

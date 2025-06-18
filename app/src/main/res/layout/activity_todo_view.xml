@@ -18,19 +18,37 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-
         android:background="@color/white">
 
-        <TextView
-            android:id="@+id/todo_empty_view"
+
+        <androidx.recyclerview.widget.RecyclerView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="Main Content will go here"
-            android:textSize="18sp"
-            android:textColor="@color/black" />
+            android:id="@+id/recyclerView"
+            android:layout_margin="8dp"
+            tools:listitem="@layout/item_active_todo"/>
+
+            <TextView
+                android:id="@+id/todo_empty_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="No todos yet!\nTap + to add your first todo"
+                android:textSize="18sp"
+                android:textColor="@color/black"
+                android:visibility="gone" />
+
+            <!-- Floating Action Button -->
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_add_todo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:layout_marginBottom="50dp"
+                android:layout_marginEnd="30dp"
+                android:contentDescription="Add Todo"
+                android:src="@android:drawable/ic_input_add" />
+
     </FrameLayout>
-
-
 
 </LinearLayout>

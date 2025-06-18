@@ -3,4 +3,9 @@
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
     <color name="primary">#6200EE</color>        <!-- Optional: for theming -->
+
+    <color name="priority_high_bg">#FFEBEE</color>     <!-- Light red -->
+    <color name="priority_medium_bg">#FFF9C4</color>   <!-- Light yellow -->
+    <color name="priority_low_bg">#E8F5E8</color>      <!-- Light green -->
+    <color name="priority_none_bg">#FAFAFA</color>     <!-- Light gray -->
 </resources>
