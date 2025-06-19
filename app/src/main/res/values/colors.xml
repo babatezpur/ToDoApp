@@ -8,4 +8,10 @@
     <color name="priority_medium_bg">#FFF9C4</color>   <!-- Light yellow -->
     <color name="priority_low_bg">#E8F5E8</color>      <!-- Light green -->
     <color name="priority_none_bg">#FAFAFA</color>     <!-- Light gray -->
+
+    <color name="priority_high_text">#B71C1C</color>    <!-- Dark red -->
+    <color name="priority_medium_text">#F57F17</color>  <!-- Dark yellow -->
+    <color name="priority_low_text">#1B5E20</color>     <!-- Dark green -->
+
+    <color name="border_color">#E0E0E0</color>
 </resources>

@@ -22,6 +22,9 @@ data class Todo(
     @ColumnInfo(name = "due_date")
     val dueDate: LocalDateTime,
 
+    @ColumnInfo(name = "reminder_date_time")
+    val reminderDateTime: LocalDateTime? = null, // NEW: Optional reminder
+
     @ColumnInfo(name = "created_at")
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
