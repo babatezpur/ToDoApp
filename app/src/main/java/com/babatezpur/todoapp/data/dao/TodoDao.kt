@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 interface TodoDao {
 
     @Insert
-    suspend fun insertTodo(todo: Todo)
+    suspend fun insertTodo(todo: Todo) : Long
 
     @Delete
     suspend fun deleteTodo(todo: Todo)
@@ -25,7 +25,7 @@ interface TodoDao {
 
 
     @Query("SELECT * FROM todos WHERE id = :todoId")
-    suspend fun getTodoById(todoId: Long): Todo?
+    fun getTodoById(todoId: Long): Flow<Todo?>
 
     // Primary method for the main To-Do list screen - shows current work
     @Query("SELECT * FROM todos WHERE is_completed = 0 ORDER BY created_at DESC")
@@ -44,5 +44,27 @@ interface TodoDao {
     fun getCompletedTodos(): Flow<List<Todo>>
 
     @Query("SELECT * FROM todos WHERE is_completed = 0 ORDER BY priority ASC, due_date ASC")
-    fun getActiveTodosSortedByPriority(): Flow<List<Todo>>
+    fun getActiveTodosByPriority(): Flow<List<Todo>>
+
+
+    // Mark complete/incomplete by ID
+    @Query("""
+        UPDATE todos 
+        SET is_completed = :isCompleted, 
+            updated_at = :updatedAt
+        WHERE id = :todoId
+    """)
+    suspend fun updateCompletionStatus(
+        todoId: Long,
+        isCompleted: Boolean,
+        updatedAt: Long = System.currentTimeMillis()
+    )
+
+    // Convenience methods
+    suspend fun markComplete(todoId: Long) =
+        updateCompletionStatus(todoId, true)
+
+    suspend fun markIncomplete(todoId: Long) =
+        updateCompletionStatus(todoId, false)
+
 }
