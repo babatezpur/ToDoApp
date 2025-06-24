@@ -43,12 +43,14 @@ class TodoViewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_todo_view)
 
+
         setupViewModel()
         setupViews()
         setupRecyclerView()
         setupFAB()
         observeViewModel()
     }
+
 
     override fun onResume() {
         super.onResume()
@@ -161,15 +163,45 @@ class TodoViewActivity : AppCompatActivity() {
     }
 
     private fun handleTodoCompletion(todo: Todo, position: Int, isChecked: Boolean) {
-        if (isChecked) {
-            // Mark todo as completed
-            todoViewViewModel.markTodoComplete(todo)
-            //removeTodoFromList(todo) // Remove from list after marking complete
-        } else {
-            // Handle unchecking if needed
-            Toast.makeText(this, "Todo marked as incomplete", Toast.LENGTH_SHORT).show()
+        Log.d("TodoDebug", "Todo completion changed: ${todo.title} -> $isChecked")
+
+        when {
+            isChecked && !todo.isCompleted -> {
+                // ✅ Completing a todo - show visual feedback with delay
+                handleTodoCompletionWithDelay(todo, position)
+            }
+            !isChecked && todo.isCompleted -> {
+                // ✅ Unchecking a completed todo
+                todoViewViewModel.toggleTodoCompletion(todo)
+                Toast.makeText(this, "Todo marked as incomplete", Toast.LENGTH_SHORT).show()
+            }
+            else -> {
+                // No change in state, revert checkbox
+                todoAdapter.notifyItemChanged(position)
+            }
         }
     }
+
+    private fun handleTodoCompletionWithDelay(todo: Todo, position: Int) {
+        // The checkbox is already visually checked due to user interaction
+        // Now we handle the backend update with delay
+
+        // Disable the checkbox temporarily to prevent multiple clicks
+        val viewHolder = recyclerView.findViewHolderForAdapterPosition(position) as? TodoAdapter.TodoViewHolder
+        viewHolder?.checkBoxComplete?.isEnabled = false
+
+        // Show immediate feedback
+        Toast.makeText(this, "Completing todo...", Toast.LENGTH_SHORT).show()
+
+        // Call ViewModel method that handles the delay and database update
+        todoViewViewModel.markTodoCompleteWithDelay(todo)
+
+        // Re-enable checkbox after a short delay (in case of error)
+        recyclerView.postDelayed({
+            viewHolder?.checkBoxComplete?.isEnabled = true
+        }, 2000)
+    }
+
 
     private fun removeTodoFromList(completedTodo: Todo) {
         val position = todoList.indexOf(completedTodo)

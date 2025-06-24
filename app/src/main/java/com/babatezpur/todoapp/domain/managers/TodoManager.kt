@@ -102,4 +102,15 @@ class TodoManager(private val todoRepository: TodoRepository) {
     private fun cancelNotification(todoId: Long) {
         // TODO: Cancel scheduled notification
     }
+
+    suspend fun markTodoIncomplete(id: Long): Result<Unit> {
+        val result = try {
+            todoRepository.markIncomplete(id)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+        return result
+    }
 }

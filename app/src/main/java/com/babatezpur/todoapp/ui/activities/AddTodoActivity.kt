@@ -4,6 +4,7 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.os.Bundle
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.RadioGroup
 import android.widget.Switch
@@ -46,6 +47,7 @@ class AddTodoActivity : AppCompatActivity() {
     private lateinit var tvReminderDate: TextView
     private lateinit var tvReminderTime: TextView
     private lateinit var btnSaveTodo: Button
+    private lateinit var btnBack: ImageButton
 
     private lateinit var addTodoViewModel: AddTodoViewModel
 
@@ -101,11 +103,16 @@ class AddTodoActivity : AppCompatActivity() {
         tvReminderDate = findViewById(R.id.tvReminderDate)
         tvReminderTime = findViewById(R.id.tvReminderTime)
         btnSaveTodo = findViewById(R.id.btnSaveTodo)
+        btnBack = findViewById(R.id.btnBack)
     }
 
     private fun setupClickListeners() {
         tvSelectedDate.setOnClickListener {
             showDatePicker(isForReminder = false)
+        }
+
+        btnBack.setOnClickListener {
+            finish()
         }
 
         tvSelectedTime.setOnClickListener {

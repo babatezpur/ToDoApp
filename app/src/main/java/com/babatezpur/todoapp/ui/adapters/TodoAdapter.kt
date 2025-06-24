@@ -12,12 +12,17 @@ import androidx.recyclerview.widget.RecyclerView
 import com.babatezpur.todoapp.R
 import com.babatezpur.todoapp.data.entities.Priority
 import com.babatezpur.todoapp.data.entities.Todo
+import java.time.format.DateTimeFormatter
 
+// Problem : todo disappears as soon as it is completed, we need to show the checked sign for a few seconds before removing it from the list
 class TodoAdapter(
     private val todoList : MutableList<Todo>,
     private val onTodoClick : (Todo, Int) -> Unit,
     private val onTodoComplete : (Todo, Int, Boolean) -> Unit
 ) : RecyclerView.Adapter<TodoAdapter.TodoViewHolder>() {
+
+    private val dateTimeFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy 'at' hh:mm a")
+
 
     // Define a ViewHolder class to hold the views for each item
     inner class TodoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -38,15 +43,19 @@ class TodoAdapter(
 
         holder.todoTitle.text = todo.title
         holder.todoDescription.text = todo.description
-        holder.todoDueDate.text = todo.dueDate.toString() // Format as needed
+        holder.todoDueDate.text = todo.dueDate.format(dateTimeFormatter).toString() // Format as needed
         holder.checkBoxComplete.isChecked = todo.isCompleted
         // Set card background color based on priority
         setPriorityBackground(holder.cardView, todo.priority)
-        holder.cardView.setOnClickListener {
+        holder.itemView.setOnClickListener {
             onTodoClick(todo, position)
         }
+        // Handle checkbox completion with proper listener management
+        holder.checkBoxComplete.setOnCheckedChangeListener(null) // Clear previous listener
         holder.checkBoxComplete.setOnCheckedChangeListener { _, isChecked ->
-            // onTodoCompleted(todo, isChecked)
+            if (isChecked != todo.isCompleted) { // Only trigger if state actually changed
+                onTodoComplete(todo, position, isChecked)
+            }
         }
     }
 
@@ -65,7 +74,23 @@ class TodoAdapter(
         cardView.setCardBackgroundColor(ContextCompat.getColor(context, colorRes))
     }
 
-    // Method to update the list
+    // Method to update specific todo (useful for delayed updates)
+    fun updateTodo(position: Int, updatedTodo: Todo) {
+        if (position >= 0 && position < todoList.size) {
+            todoList[position] = updatedTodo
+            notifyItemChanged(position)
+        }
+    }
+
+    // Method to remove todo with animation
+    fun removeTodo(position: Int) {
+        if (position >= 0 && position < todoList.size) {
+            todoList.removeAt(position)
+            notifyItemRemoved(position)
+        }
+    }
+
+    // Method to update the entire list
     fun updateTodos(newTodos: List<Todo>) {
         todoList.clear()
         todoList.addAll(newTodos)
