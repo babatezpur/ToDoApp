@@ -20,35 +20,49 @@
         android:layout_weight="1"
         android:background="@color/white">
 
-
+        <!-- RecyclerView at the bottom of the stack -->
         <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/recyclerView"
             android:layout_margin="8dp"
-            tools:listitem="@layout/item_active_todo"/>
+            tools:listitem="@layout/item_active_todo" />
 
-            <TextView
-                android:id="@+id/todo_empty_view"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="No todos yet!\nTap + to add your first todo"
-                android:textSize="18sp"
-                android:textColor="@color/black"
-                android:visibility="gone" />
+        <!-- Empty view overlay -->
+        <TextView
+            android:id="@+id/todo_empty_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="No todos yet!\nTap + to add your first todo"
+            android:textSize="18sp"
+            android:textColor="@color/black"
+            android:visibility="gone" />
 
-            <!-- Floating Action Button -->
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/fab_add_todo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|end"
-                android:layout_marginBottom="50dp"
-                android:layout_marginEnd="30dp"
-                android:contentDescription="Add Todo"
-                android:src="@android:drawable/ic_input_add" />
+        <!-- Progress bar overlay -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            tools:visibility="visible"
+            android:clickable="false"
+            android:focusable="false" />
+
+        <!-- Move FAB here, outside the FrameLayout -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_add_todo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginBottom="50dp"
+            android:layout_marginEnd="30dp"
+            android:background="@android:color/holo_red_light"
+            android:contentDescription="Add Todo"
+            android:src="@android:drawable/ic_input_add" />
 
     </FrameLayout>
+
 
 </LinearLayout>

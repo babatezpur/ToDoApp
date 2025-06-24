@@ -4,14 +4,26 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.babatezpur.todoapp.R
+import com.babatezpur.todoapp.data.database.TodoDatabase
 import com.babatezpur.todoapp.data.entities.Priority
 import com.babatezpur.todoapp.data.entities.Todo
+import com.babatezpur.todoapp.data.repositories.TodoRepository
+import com.babatezpur.todoapp.domain.managers.TodoManager
 import com.babatezpur.todoapp.ui.adapters.TodoAdapter
+import com.babatezpur.todoapp.viewmodels.TodoViewUiState
+import com.babatezpur.todoapp.viewmodels.TodoViewViewModel
+import com.babatezpur.todoapp.viewmodels.TodoViewViewModelFactory
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
 class TodoViewActivity : AppCompatActivity() {
@@ -22,30 +34,58 @@ class TodoViewActivity : AppCompatActivity() {
     private var selectedTodo: Todo? = null
     private lateinit var fabAddTodo : FloatingActionButton
     private lateinit var emptyView: TextView
+    private lateinit var progressBar: ProgressBar
 
+    // Initialize the ViewModel if needed
+    private lateinit var todoViewViewModel: TodoViewViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_todo_view)
 
+        setupViewModel()
+        setupViews()
         setupRecyclerView()
         setupFAB()
-        loadTodos()
+        observeViewModel()
     }
 
-    private fun setupRecyclerView() {
+    override fun onResume() {
+        super.onResume()
+        // Refresh todos when returning from AddTodoActivity
+        todoViewViewModel.refreshTodos()
+    }
+
+    private fun setupViewModel() {
+        // Create dependencies
+        val database = TodoDatabase.getDatabase(this)
+        val repository = TodoRepository(database.todoDao())
+        val todoManager = TodoManager(repository)
+
+        // Create ViewModel with factory
+        val factory = TodoViewViewModelFactory(todoManager)
+        todoViewViewModel = ViewModelProvider(this, factory)[TodoViewViewModel::class.java]
+    }
+
+    private fun setupViews() {
         recyclerView = findViewById(R.id.recyclerView)
+        emptyView = findViewById(R.id.todo_empty_view)
+        progressBar = findViewById(R.id.progressBar)
+        fabAddTodo = findViewById(R.id.fab_add_todo)
+        emptyView.visibility = TextView.GONE // Initially hidden
+    }
+
+
+    private fun setupRecyclerView() {
         emptyView = findViewById(R.id.todo_empty_view)
         Log.d("TodoDebug", "Setting up RecyclerView with ${todoList.size} items")
         todoAdapter = TodoAdapter(
             todoList,
-            onTodoClick = { todo, pos ->
-                // Handle todo item click
-                // handleTodoClick(todo, pos)
+            onTodoClick = { todo, position ->
+                handleTodoClick(todo, position)
             },
-            onTodoComplete = { todo, pos, isChecked ->
-                // Handle todo completion
-               // handleTodoCompletion(todo, pos, isChecked)
+            onTodoComplete = { todo, position, isChecked ->
+                handleTodoCompletion(todo, position, isChecked)
             }
         )
         recyclerView.apply {
@@ -56,18 +96,48 @@ class TodoViewActivity : AppCompatActivity() {
     }
 
     private fun setupFAB() {
-        fabAddTodo = findViewById(R.id.fab_add_todo)
+        Log.d("TodoView", "setupFAB called")
+        // ... your existing logs ...
+
+        fabAddTodo.setOnTouchListener { v, event ->
+            Log.d("TodoView", "FAB touch detected: ${event.action}")
+            false // Don't consume the event
+        }
+
         fabAddTodo.setOnClickListener {
-            // Handle FAB click to add a new todo
+            Log.d("TodoView", "FAB clicked to add new todo")
             val intent = Intent(this, AddTodoActivity::class.java)
             startActivity(intent)
         }
     }
 
-    private fun loadTodos() {
-        // Add sample data for testing
-        addSampleTodos()
-        updateEmptyState()
+    private fun observeViewModel() {
+        lifecycleScope.launch {
+            todoViewViewModel.uiState.collect { state ->
+                handleUiState(state)
+            }
+        }
+    }
+
+    private fun handleUiState(state: TodoViewUiState) {
+        progressBar.visibility = if (state.isLoading) View.VISIBLE else View.GONE
+
+        state.error?.let {
+            if (it.isNotEmpty()) {
+                Log.e("TodoDebug", "Error loading todos: $it")
+                Toast.makeText(this, it, Toast.LENGTH_LONG).show()
+                // Show error message to user
+            }
+        }
+        updateTodoList(state.todos)
+    }
+
+    private fun updateTodoList(todos: List<Todo>) {
+        todoList.clear()
+        todoList.addAll(todos)
+        todoAdapter.notifyDataSetChanged()
+
+        updateEmptyState() // Update empty state visibility
     }
 
 
@@ -81,6 +151,26 @@ class TodoViewActivity : AppCompatActivity() {
         }
     }
 
+    private fun handleTodoClick(todo: Todo, position: Int) {
+        selectedTodo = todo
+        // Handle the click event, e.g., open a detail view or edit screen
+        val intent = Intent(this, EditTodoActivity::class.java).apply {
+            putExtra("todo_id", todo.id)
+        }
+        startActivity(intent)
+    }
+
+    private fun handleTodoCompletion(todo: Todo, position: Int, isChecked: Boolean) {
+        if (isChecked) {
+            // Mark todo as completed
+            todoViewViewModel.markTodoComplete(todo)
+            //removeTodoFromList(todo) // Remove from list after marking complete
+        } else {
+            // Handle unchecking if needed
+            Toast.makeText(this, "Todo marked as incomplete", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun removeTodoFromList(completedTodo: Todo) {
         val position = todoList.indexOf(completedTodo)
         if (position != -1) {
@@ -91,62 +181,7 @@ class TodoViewActivity : AppCompatActivity() {
         }
     }
 
-    private fun addSampleTodos() {
-        val sampleTodos = listOf(
-            Todo(
-                id = 0L, // Will auto-generate
-                title = "Submit quarterly report",
-                description = "Compile Q2 financial data and submit to management by end of week",
-                dueDate = LocalDateTime.of(2025, 6, 20, 17, 0), // June 20, 2025 at 5:00 PM
-                priority = Priority.P1, // High priority
-                isCompleted = false
-            ),
-            Todo(
-                id = 0L,
-                title = "Buy groceries",
-                description = "Get milk, bread, eggs, chicken, vegetables, and fruits from supermarket",
-                dueDate = LocalDateTime.of(2025, 6, 19, 18, 30), // June 19, 2025 at 6:30 PM
-                priority = Priority.P2, // Medium priority
-                isCompleted = false
-            ),
-            Todo(
-                id = 0L,
-                title = "Schedule dentist appointment",
-                description = "Call dental office to book annual cleaning and checkup",
-                dueDate = LocalDateTime.of(2025, 6, 25, 10, 0), // June 25, 2025 at 10:00 AM
-                priority = Priority.P3, // Low priority
-                isCompleted = false
-            ),
-            Todo(
-                id = 0L,
-                title = "Prepare presentation",
-                description = "Create slides for Monday's client meeting on new product features",
-                dueDate = LocalDateTime.of(2025, 6, 21, 9, 0), // June 21, 2025 at 9:00 AM
-                priority = Priority.P1, // High priority
-                isCompleted = false
-            ),
-            Todo(
-                id = 0L,
-                title = "Water house plants",
-                description = "Check all indoor plants and water as needed, especially the peace lily",
-                dueDate = LocalDateTime.of(2025, 6, 18, 8, 0), // June 18, 2025 at 8:00 AM
-                priority = Priority.P3, // Low priority
-                isCompleted = false
-            ),
-            Todo(
-                id = 0L,
-                title = "Book flight tickets",
-                description = "Find and book round-trip tickets to New York for vacation next month",
-                dueDate = LocalDateTime.of(2025, 6, 23, 14, 0), // June 23, 2025 at 2:00 PM
-                priority = Priority.P2, // Medium priority
-                isCompleted = false
-            )
-        )
 
-        todoList.addAll(sampleTodos)
-        Log.d("TodoDebug", "Added ${todoList.size} todos to list")
-        todoAdapter.notifyDataSetChanged()
-    }
 
 
 

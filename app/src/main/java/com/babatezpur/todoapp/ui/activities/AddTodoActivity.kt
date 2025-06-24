@@ -15,9 +15,17 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.babatezpur.todoapp.R
+import com.babatezpur.todoapp.data.database.TodoDatabase
+import com.babatezpur.todoapp.data.repositories.TodoRepository
+import com.babatezpur.todoapp.domain.managers.TodoManager
+import com.babatezpur.todoapp.viewmodels.AddTodoViewModel
+import com.babatezpur.todoapp.viewmodels.AddTodoViewModelFactory
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -26,7 +34,7 @@ import java.util.Calendar
 
 class AddTodoActivity : AppCompatActivity() {
 
-    private lateinit var toolbar: Toolbar
+//    private lateinit var toolbar: Toolbar
     private lateinit var etTitle: TextInputEditText
     private lateinit var etDescription: TextInputEditText
     private lateinit var tilTitle: TextInputLayout
@@ -38,6 +46,8 @@ class AddTodoActivity : AppCompatActivity() {
     private lateinit var tvReminderDate: TextView
     private lateinit var tvReminderTime: TextView
     private lateinit var btnSaveTodo: Button
+
+    private lateinit var addTodoViewModel: AddTodoViewModel
 
     private var dueDate: LocalDate? = null
     private var dueTime: LocalTime? = null
@@ -56,20 +66,24 @@ class AddTodoActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_todo)
 
-        setupToolbar()
+        setupViewModel()
+
         initViews()
         setupClickListeners()
+
+        observeViewModel()
     }
 
-    private fun setupToolbar() {
-        toolbar = findViewById(R.id.toolbar)
-        setSupportActionBar(toolbar)
-        supportActionBar?.apply {
-            setDisplayShowHomeEnabled(true)
-            setDisplayHomeAsUpEnabled(true)
-            title = "Add Todo"
-        }
+    private fun setupViewModel() {
+        val database = TodoDatabase.getDatabase(this)
+        val repository = TodoRepository(database.todoDao())
+        val todoManager = TodoManager(repository)
+
+        val factory = AddTodoViewModelFactory(todoManager)
+        addTodoViewModel = ViewModelProvider(this, factory)[AddTodoViewModel::class.java]
+
     }
+
     override fun onSupportNavigateUp(): Boolean {
         finish()
         return true
@@ -122,6 +136,35 @@ class AddTodoActivity : AppCompatActivity() {
         }
     }
 
+    private fun observeViewModel() {
+        lifecycleScope.launch {
+            addTodoViewModel.uiState.collect { state ->
+                when {
+                    state.isLoading -> {
+                        btnSaveTodo.isEnabled = false
+                        btnSaveTodo.text = "Saving..."
+
+                    }
+                    state.isSuccess -> {
+                        Toast.makeText(this@AddTodoActivity, "Todo saved successfully", Toast.LENGTH_SHORT).show()
+                        finish() // Close the activity after saving
+                    }
+                    state.error != null -> {
+                        btnSaveTodo.isEnabled = true
+                        btnSaveTodo.text = "Save Todo"
+                        Toast.makeText(this@AddTodoActivity, "Error: ${state.error}", Toast.LENGTH_LONG).show()
+                        addTodoViewModel.clearError()
+                    }
+
+                    else -> {
+                        btnSaveTodo.isEnabled = true
+                        btnSaveTodo.text = "Save Todo"
+                    }
+                }
+            }
+        }
+    }
+
     private fun resetReminderViews() {
         tvReminderDate.text = "Select Date"
         tvReminderTime.text = "Select Time"
@@ -160,8 +203,13 @@ class AddTodoActivity : AppCompatActivity() {
             LocalDateTime.of(reminderDate!!, reminderTime!!)
         } else null
 
-        // TODO: Save the todo to the database using ViewModel
-        Toast.makeText(this, "Todo saved successfully", Toast.LENGTH_SHORT).show()
+        addTodoViewModel.createTodo(
+            title = title,
+            description = description,
+            priority = priority,
+            dueDateTime = dueDateTime,
+            reminderDateTime = reminderDateTime
+        )
         finish() // Close the activity after saving
     }
 

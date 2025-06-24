@@ -24,6 +24,6 @@ class TodoRepository (private val todoDao: TodoDao) {
     fun getTodosByPriority(): Flow<List<Todo>> =
         todoDao.getActiveTodosByPriority()
 
-    fun getOverdueTodos(currentDateTime: Long): Flow<List<Todo>> = todoDao.getOverdueTodos(currentDateTime)
+    fun getOverdueTodos(currentDateTime: Long): Flow<List<Todo>> = todoDao.getOverdueTodos()
 
 }

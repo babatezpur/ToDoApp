@@ -7,6 +7,7 @@ import androidx.room.Query
 import androidx.room.Update
 import com.babatezpur.todoapp.data.entities.Todo
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDateTime
 
 @Dao
 interface TodoDao {
@@ -35,7 +36,7 @@ interface TodoDao {
     fun getActiveTodosSortedByDueDate(): Flow<List<Todo>>
 
     @Query("SELECT * FROM todos WHERE due_date <= :currentDateTime AND is_completed = 0 ORDER BY due_date ASC")
-    fun getOverdueTodos(currentDateTime: Long): Flow<List<Todo>>
+    fun getOverdueTodos(currentDateTime: LocalDateTime = LocalDateTime.now()): Flow<List<Todo>>
 
     @Query("SELECT * FROM todos WHERE is_completed = 0 ORDER BY due_date ASC")
     fun getActiveTodos(): Flow<List<Todo>>
