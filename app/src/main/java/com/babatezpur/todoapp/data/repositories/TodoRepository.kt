@@ -11,6 +11,14 @@ class TodoRepository (private val todoDao: TodoDao) {
 
     fun getTodoById(id: Long): Flow<Todo?> = todoDao.getTodoById(id)
 
+    // 📋 DIRECT METHODS (for receivers - one-time fetch)
+    suspend fun getTodoByIdDirect(id: Long): Todo? = todoDao.getTodoByIdDirect(id)
+
+    suspend fun getAllTodosDirect(): List<Todo> = todoDao.getAllTodosDirect()
+
+    suspend fun getAllActiveTodosDirect(): List<Todo> = todoDao.getAllActiveTodosDirect()
+
+
     suspend fun insertTodo(todo: Todo): Long = todoDao.insertTodo(todo)
 
     suspend fun updateTodo(todo: Todo) = todoDao.updateTodo(todo)

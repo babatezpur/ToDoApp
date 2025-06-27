@@ -28,6 +28,16 @@ interface TodoDao {
     @Query("SELECT * FROM todos WHERE id = :todoId")
     fun getTodoById(todoId: Long): Flow<Todo?>
 
+    // 📋 DIRECT METHODS (for receivers - returns data directly)
+    @Query("SELECT * FROM todos WHERE id = :id LIMIT 1")
+    suspend fun getTodoByIdDirect(id: Long): Todo?
+
+    @Query("SELECT * FROM todos ORDER BY due_date ASC")
+    suspend fun getAllTodosDirect(): List<Todo>
+
+    @Query("SELECT * FROM todos WHERE is_completed = 0 ORDER BY due_date ASC")
+    suspend fun getAllActiveTodosDirect(): List<Todo>
+
     // Primary method for the main To-Do list screen - shows current work
     @Query("SELECT * FROM todos WHERE is_completed = 0 ORDER BY created_at DESC")
     fun getActiveTodosByCreationDate(): Flow<List<Todo>>

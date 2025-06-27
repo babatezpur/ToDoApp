@@ -11,6 +11,34 @@ class TodoManager(private val todoRepository: TodoRepository) {
     fun getAllTodos(): Flow<List<Todo>> = todoRepository.getAllTodos()
     fun getTodoById(id: Long): Flow<Todo?> = todoRepository.getTodoById(id)
 
+    // 📋 DIRECT METHODS (for receivers - one-time fetch with Result wrapper)
+    suspend fun getTodoByIdDirect(id: Long): Result<Todo?> {
+        return try {
+            val todo = todoRepository.getTodoByIdDirect(id)
+            Result.success(todo)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getAllTodosDirect(): Result<List<Todo>> {
+        return try {
+            val todos = todoRepository.getAllTodosDirect()
+            Result.success(todos)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getAllActiveTodosDirect(): Result<List<Todo>> {
+        return try {
+            val todos = todoRepository.getAllActiveTodosDirect()
+            Result.success(todos)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun createTodo(
         title: String,
         description: String,
@@ -113,4 +141,25 @@ class TodoManager(private val todoRepository: TodoRepository) {
 
         return result
     }
+
+    /**
+    * 🔧 EXTENSION HELPER: Gets todos once instead of as Flow
+    *
+    * WHY NEEDED:
+    * - BootReceiver needs one-time data fetch, not continuous Flow
+    * - Flow would keep receiver alive indefinitely
+    *
+    */
+
+    suspend fun TodoManager.getAllTodosOnce(): Result<List<Todo>> {
+        return try {
+            // Implementation needed in TodoManager:
+            // Get todos from repository without Flow
+            val todos = todoRepository.getAllTodosDirect() // Add this to repository
+            Result.success(todos)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
+
