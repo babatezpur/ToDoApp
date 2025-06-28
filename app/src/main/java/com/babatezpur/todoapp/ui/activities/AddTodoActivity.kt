@@ -1,8 +1,12 @@
 package com.babatezpur.todoapp.ui.activities
 
+import android.Manifest
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.LinearLayout
@@ -11,9 +15,11 @@ import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
@@ -74,6 +80,8 @@ class AddTodoActivity : AppCompatActivity() {
         setupClickListeners()
 
         observeViewModel()
+
+        setDefaultValues()
     }
 
     private fun setupViewModel() {
@@ -81,7 +89,7 @@ class AddTodoActivity : AppCompatActivity() {
         val repository = TodoRepository(database.todoDao())
         val todoManager = TodoManager(repository)
 
-        val factory = AddTodoViewModelFactory(todoManager)
+        val factory = AddTodoViewModelFactory(todoManager, this)
         addTodoViewModel = ViewModelProvider(this, factory)[AddTodoViewModel::class.java]
 
     }
@@ -123,11 +131,16 @@ class AddTodoActivity : AppCompatActivity() {
             if (isChecked) {
                 layoutReminderDetails.visibility = LinearLayout.VISIBLE
                 Toast.makeText(this, "Please set reminder date and time", Toast.LENGTH_SHORT).show()
+
+                // Check permissions when user enables reminder
+                checkAndRequestPermissions()
             } else {
                 layoutReminderDetails.visibility = LinearLayout.GONE
                 reminderDate = null
                 reminderTime = null
                 resetReminderViews()
+                clearReminderData()
+
             }
         }
         tvReminderDate.setOnClickListener {
@@ -172,10 +185,68 @@ class AddTodoActivity : AppCompatActivity() {
         }
     }
 
+    private fun setDefaultValues() {
+        // Hide reminder details initially
+        layoutReminderDetails.visibility = View.GONE
+
+        // Set default priority to Medium
+        rgPriority.check(R.id.rbMediumPriority)
+    }
+
     private fun resetReminderViews() {
         tvReminderDate.text = "Select Date"
         tvReminderTime.text = "Select Time"
     }
+
+    private fun checkAndRequestPermissions() {
+        // Check notification permission first (Android 13+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                return
+            }
+        }
+
+        // If notification permission is OK, check exact alarm permission
+        checkExactAlarmPermission()
+    }
+
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            Toast.makeText(this, "✅ Notification permission granted", Toast.LENGTH_SHORT).show()
+            checkExactAlarmPermission()
+        } else {
+            Toast.makeText(this, "⚠️ Notification permission denied. Reminders may not work.", Toast.LENGTH_LONG).show()
+            // User can still use the app, but reminders won't show
+        }
+    }
+
+    private fun checkExactAlarmPermission() {
+        if (!addTodoViewModel.checkReminderPermissions()) {
+            // Show explanation dialog
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Precise Reminders")
+                .setMessage("For exact reminder timing, please allow precise alarms in the next screen.")
+                .setPositiveButton("Open Settings") { _, _ ->
+                    addTodoViewModel.requestReminderPermissions()
+                }
+                .setNegativeButton("Skip") { _, _ ->
+                    Toast.makeText(this, "⚠️ Reminders may be delayed without precise timing", Toast.LENGTH_LONG).show()
+                }
+                .show()
+        }
+    }
+
+    private fun clearReminderData() {
+        reminderDate = null
+        reminderTime = null
+        tvReminderDate.text = "Select Date"
+        tvReminderTime.text = "Select Time"
+    }
+
 
     private fun saveTodo() {
         val title = etTitle.text.toString().trim()
@@ -187,27 +258,59 @@ class AddTodoActivity : AppCompatActivity() {
             else -> "Medium" // Default priority
         }
 
+        // ✅ BASIC VALIDATION
         if (title.isEmpty()) {
-            tilTitle.error = "Title cannot be empty"
+            tilTitle.error = "Title is required"
+            etTitle.requestFocus()
             return
         } else {
             tilTitle.error = null
         }
 
         if (dueDate == null) {
-            Toast.makeText(this, "Please select due date and time", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "📅 Please select due date", Toast.LENGTH_SHORT).show()
             return
         }
 
-        if (switchReminder.isChecked && (reminderDate == null || reminderTime == null)) {
-            Toast.makeText(this, "Please set reminder date and time", Toast.LENGTH_SHORT).show()
+        if (dueTime == null) {
+            Toast.makeText(this, "⏰ Please select due time", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Combine date and time when saving
+        // ✅ CREATE DATE/TIME OBJECTS
         val dueDateTime = LocalDateTime.of(dueDate!!, dueTime!!)
-        val reminderDateTime = if (switchReminder.isChecked && reminderDate != null && reminderTime != null) {
-            LocalDateTime.of(reminderDate!!, reminderTime!!)
+
+        // Validate due date
+        val dueDateError = addTodoViewModel.validateDueDateTime(dueDateTime)
+        if (dueDateError != null) {
+            Toast.makeText(this, "❌ $dueDateError", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // ✅ HANDLE REMINDER VALIDATION
+        val reminderDateTime = if (switchReminder.isChecked) {
+            if (reminderDate == null || reminderTime == null) {
+                Toast.makeText(this, "📅 Please set reminder date and time", Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            val reminder = LocalDateTime.of(reminderDate!!, reminderTime!!)
+
+            // Validate reminder time
+            val reminderError = addTodoViewModel.validateReminderTime(reminder)
+            if (reminderError != null) {
+                Toast.makeText(this, "❌ $reminderError", Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            // Validate reminder is before due time
+            val beforeDueError = addTodoViewModel.validateReminderBeforeDue(reminder, dueDateTime)
+            if (beforeDueError != null) {
+                Toast.makeText(this, "❌ $beforeDueError", Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            reminder
         } else null
 
         addTodoViewModel.createTodo(
@@ -217,7 +320,6 @@ class AddTodoActivity : AppCompatActivity() {
             dueDateTime = dueDateTime,
             reminderDateTime = reminderDateTime
         )
-        finish() // Close the activity after saving
     }
 
     private fun showDatePicker(isForReminder : Boolean) {

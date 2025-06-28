@@ -31,7 +31,7 @@ class TodoReminderReceiver : BroadcastReceiver() {
         // Handle the reminder action here
         // You can extract data from the intent and perform necessary actions
         val todoId = intent.getLongExtra(EXTRA_TODO_ID, -1L)
-        if (todoId != -1L) {
+        if (todoId == -1L) {
             Log.e(TAG, "❌ Invalid todo ID received - alarm was malformed")
             return
         }

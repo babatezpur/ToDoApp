@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 @Entity(tableName = "todos")
 data class Todo(
     @PrimaryKey(autoGenerate = true)
-    val id: Long = 0L, // Use Long for auto-incrementing primary key in Room
+    var id: Long = 0L, // Use Long for auto-incrementing primary key in Room
 
     @ColumnInfo(name = "title")
     val title: String,

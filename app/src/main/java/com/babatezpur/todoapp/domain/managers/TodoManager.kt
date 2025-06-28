@@ -46,7 +46,7 @@ class TodoManager(private val todoRepository: TodoRepository) {
         dueDateTime: LocalDateTime, // Store as epoch milliseconds
         reminderDateTime: LocalDateTime? = null, // Optional reminder
         isCompleted: Boolean = false
-    ): Result<Long> {
+    ): Result<Todo> {
         try {
             // Business validation
             if (title.isBlank()) {
@@ -84,7 +84,8 @@ class TodoManager(private val todoRepository: TodoRepository) {
                 scheduleNotification(todoId, title, it)
             }
 
-            return Result.success(todoId)
+            todo.id = todoId // Set the ID from the database
+            return Result.success(todo)
         } catch (e : Exception) {
             return Result.failure(e)
         }

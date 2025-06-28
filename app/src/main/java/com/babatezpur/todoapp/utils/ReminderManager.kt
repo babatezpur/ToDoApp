@@ -57,7 +57,7 @@ class ReminderManager(private val context: Context) {
         }
 
         val triggerTimeMillis = reminderDateTime
-            .atZone(ZoneOffset.UTC) // Convert to UTC for consistency
+            .atZone(java.time.ZoneId.systemDefault()) // Use device's local timezone
             .toInstant()
             .toEpochMilli()
 
@@ -105,7 +105,7 @@ class ReminderManager(private val context: Context) {
      *
      * WHY IMPORTANT: Exact alarms provide precise timing for reminders
      */
-    private fun canScheduleExactAlarms(): Boolean {
+    fun canScheduleExactAlarms(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             alarmManager.canScheduleExactAlarms()
         } else {
@@ -147,7 +147,7 @@ class ReminderManager(private val context: Context) {
         }
     }
 
-    private fun requestExactAlarmPermission() {
+    internal fun requestExactAlarmPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
             // Request permission to schedule exact alarms
             // This requires user interaction, so handle accordingly
