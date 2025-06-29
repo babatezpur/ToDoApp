@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Checked state with checkmark -->
+    <item android:state_checked="true">
+        <layer-list>
+            <!-- Background box -->
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="4dp" />
+                    <solid android:color="#4CAF50" />
+                    <stroke android:width="2dp" android:color="#4CAF50" />
+                </shape>
+            </item>
+            <!-- Checkmark icon on top -->
+            <item android:drawable="@drawable/ic_check"
+                android:gravity="center" />
+        </layer-list>
+    </item>
+
+    <!-- Unchecked state (just empty box) -->
+    <item android:state_checked="false">
+        <shape android:shape="rectangle">
+            <corners android:radius="4dp" />
+            <solid android:color="@android:color/transparent" />
+            <stroke android:width="2dp" android:color="#9E9E9E" />
+        </shape>
+    </item>
+</selector>

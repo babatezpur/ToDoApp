@@ -13,3 +13,10 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+*.log
+
+gradle-wrapper.jar
+.idea/androidProjectSystem.xml
+.idea/appInsightsSettings.xml
+.idea/deploymentTargetSelector.xml
