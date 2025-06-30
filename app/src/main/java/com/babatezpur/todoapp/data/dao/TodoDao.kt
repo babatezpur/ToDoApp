@@ -78,4 +78,55 @@ interface TodoDao {
     suspend fun markIncomplete(todoId: Long) =
         updateCompletionStatus(todoId, false)
 
+    // 🔍 SEARCH FUNCTIONALITY (title only, active todos only)
+    @Query("""
+        SELECT * FROM todos 
+        WHERE is_completed = 0 
+        AND title LIKE '%' || :searchQuery || '%'
+        ORDER BY created_at DESC
+    """)
+    fun searchActiveTodosByTitle(searchQuery: String): Flow<List<Todo>>
+
+    // SORTING METHODS'
+
+    @Query("""
+        SELECT * FROM todos 
+        WHERE is_completed = 0 
+        ORDER BY priority ASC, created_at DESC
+    """)
+    fun getActiveTodosSortedByPriority(): Flow<List<Todo>>
+
+    @Query("""
+        SELECT * FROM todos 
+        WHERE is_completed = 0 
+        ORDER BY created_at ASC
+    """)
+    fun getActiveTodosSortedByCreatedAsc(): Flow<List<Todo>>
+
+    // Sort by Created Date - Descending (newest first) - THIS IS DEFAULT
+    @Query("""
+        SELECT * FROM todos 
+        WHERE is_completed = 0 
+        ORDER BY created_at DESC
+    """)
+    fun getActiveTodosSortedByCreatedDesc(): Flow<List<Todo>>
+
+    // Sort by Due Date - Ascending (earliest due first)
+    @Query("""
+        SELECT * FROM todos 
+        WHERE is_completed = 0 
+        ORDER BY due_date ASC, priority ASC
+    """)
+    fun getActiveTodosSortedByDueDateAsc(): Flow<List<Todo>>
+
+    // Sort by Due Date - Descending (latest due first)
+    @Query("""
+        SELECT * FROM todos 
+        WHERE is_completed = 0 
+        ORDER BY due_date DESC, priority ASC
+    """)
+    fun getActiveTodosSortedByDueDateDesc(): Flow<List<Todo>>
+
+
+
 }

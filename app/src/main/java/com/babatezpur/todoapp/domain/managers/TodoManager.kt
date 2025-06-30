@@ -3,7 +3,9 @@ package com.babatezpur.todoapp.domain.managers
 import com.babatezpur.todoapp.data.entities.Priority
 import com.babatezpur.todoapp.data.entities.Todo
 import com.babatezpur.todoapp.data.repositories.TodoRepository
+import com.babatezpur.todoapp.domain.SortOption
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.time.LocalDateTime
 
 class TodoManager(private val todoRepository: TodoRepository) {
@@ -143,6 +145,103 @@ class TodoManager(private val todoRepository: TodoRepository) {
         return result
     }
 
+
+    fun getTodosWithSearchAndSort(
+        query: String = "",
+        sortOption: SortOption = SortOption.CREATED_DESC
+    ): Flow<List<Todo>> {
+        val cleanQuery = query.trim()
+
+//        if (cleanQuery.length > 100) {
+//            val truncatedQuery = cleanQuery.take(100)
+//            return todoRepository.getTodosWithSearchAndSort(truncatedQuery, sortOption)
+//        }
+        return todoRepository.getTodosWithSearchAndSort(cleanQuery, sortOption)
+    }
+
+    fun searchTodos(searchQuery: String): Flow<List<Todo>> {
+        val cleanQuery = searchQuery.trim()
+
+        // Business validation: Minimum search length (optional)
+        if (cleanQuery.isNotEmpty() && cleanQuery.isEmpty()) {
+            // You could return empty list or the original query
+            // For learning purposes, let's be permissive
+        }
+
+        return todoRepository.searchActiveTodos(cleanQuery)
+    }
+
+    fun getTodosSortedBy(sortOption: SortOption): Flow<List<Todo>> {
+        return todoRepository.getTodosSortedBy(sortOption)
+    }
+
+    /**
+     * Validates if a search query is acceptable
+     * Returns Result<String> with cleaned query or error
+     */
+    fun validateSearchQuery(query: String): Result<String> {
+        val cleanQuery = query.trim()
+
+        return when {
+            cleanQuery.length > 100 -> {
+                Result.failure(Exception("Search query too long (max 100 characters)"))
+            }
+            cleanQuery.contains(Regex("[<>\"';]")) -> {
+                // Basic injection protection (though Room should handle this)
+                Result.failure(Exception("Search query contains invalid characters"))
+            }
+            else -> {
+                Result.success(cleanQuery)
+            }
+        }
+    }
+
+    /**
+     * Get display name for sort option (useful for UI)
+     */
+    fun getSortOptionDisplayName(sortOption: SortOption): String {
+        return when (sortOption) {
+            SortOption.CREATED_DESC -> "Newest First"
+            SortOption.CREATED_ASC -> "Oldest First"
+            SortOption.PRIORITY -> "Priority"
+            SortOption.DUE_DATE_ASC -> "Due Date (Earliest)"
+            SortOption.DUE_DATE_DESC -> "Due Date (Latest)"
+        }
+    }
+
+    /**
+     * Get all available sort options for UI display
+     */
+    fun getAvailableSortOptions(): List<SortOption> {
+        return listOf(
+            SortOption.CREATED_DESC,  // Default first
+            SortOption.PRIORITY,
+            SortOption.DUE_DATE_ASC
+        )
+    }
+
+    /**
+     * Log search activity (useful for debugging)
+     */
+    private fun logSearchActivity(query: String, resultCount: Int) {
+        if (query.isNotBlank()) {
+            android.util.Log.d("TodoManager", "Search '$query' returned $resultCount results")
+        }
+    }
+
+    /**
+     * Wrapper that adds logging to search
+     */
+    fun searchTodosWithLogging(searchQuery: String): Flow<List<Todo>> {
+        return searchTodos(searchQuery).map { todos ->
+            logSearchActivity(searchQuery, todos.size)
+            todos
+        }
+    }
+
+
+
+
     /**
     * 🔧 EXTENSION HELPER: Gets todos once instead of as Flow
     *
@@ -162,5 +261,7 @@ class TodoManager(private val todoRepository: TodoRepository) {
             Result.failure(e)
         }
     }
+
+
 }
 
