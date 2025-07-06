@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.PopupMenu
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -125,7 +126,6 @@ class TodoViewActivity : AppCompatActivity() {
 
         // Set up more options button click listener
         moreOptionsButton.setOnClickListener {
-            Log.d("TodoView", "More options button clicked")
             handleMoreOptionsClick()
         }
 
@@ -160,7 +160,7 @@ class TodoViewActivity : AppCompatActivity() {
 
     private fun setupRecyclerView() {
         emptyView = findViewById(R.id.todo_empty_view)
-        Log.d("TodoDebug", "Setting up RecyclerView with ${todoList.size} items")
+        Log.d("TodoView", "Setting up RecyclerView with ${todoList.size} items")
         todoAdapter = TodoAdapter(
             todoList,
             onTodoClick = { todo, position ->
@@ -350,9 +350,31 @@ class TodoViewActivity : AppCompatActivity() {
 
     // NEW: Handle more options (placeholder for future features)
     private fun handleMoreOptionsClick() {
-        Log.d("TodoView", "More options clicked")
-        // TODO: Implement menu with options like "Delete completed", "Export", etc.
-        Toast.makeText(this, "More options - Coming soon!", Toast.LENGTH_SHORT).show()
+        Log.d("TodoView", "More options button clicked")
+
+        val popup = PopupMenu(this, moreOptionsButton)
+
+        popup.menuInflater.inflate(R.menu.menu_more_options, popup.menu)
+
+        popup.setOnMenuItemClickListener {  menuItem ->
+            when (menuItem.itemId) {
+                R.id.menu_completed_todos -> {
+                    Log.d("TodoView", "Completed Todos clicked")
+                    val intent = Intent(this, CompletedTodosActivity::class.java)
+                    startActivity(intent)
+                    true
+                }
+                R.id.menu_info -> {
+                    Log.d("TodoView", "Info clicked")
+//                    val intent = Intent(this, InfoActivity::class.java)
+//                    startActivity(intent)
+                    true
+                }
+                else -> false
+            }
+        }
+
+        popup.show()
     }
 
     private fun handleTodoClick(todo: Todo, position: Int) {

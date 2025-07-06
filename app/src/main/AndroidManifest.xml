@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
     <!-- Manifest permissions for alarms and notifications -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-
 
     <application
         android:allowBackup="true"
@@ -19,6 +17,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ToDOApp"
         tools:targetApi="31">
+        <activity
+            android:name=".ui.activities.CompletedTodosActivity"
+            android:exported="false" />
         <activity
             android:name=".ui.activities.EditTodoActivity"
             android:exported="false" />
@@ -33,19 +34,15 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <!-- Broadcast Receivers -->
+        </activity> <!-- Broadcast Receivers -->
         <receiver
             android:name=".receiver.TodoReminderReceiver"
             android:enabled="true"
             android:exported="false" />
-
         <receiver
             android:name=".receiver.TodoActionReceiver"
             android:enabled="true"
             android:exported="false" />
-
         <receiver
             android:name=".receiver.BootReceiver"
             android:enabled="true"
@@ -54,6 +51,7 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.PACKAGE_REPLACED" />
+
                 <data android:scheme="package" />
             </intent-filter>
         </receiver>

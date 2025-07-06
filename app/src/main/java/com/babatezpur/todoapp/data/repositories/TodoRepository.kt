@@ -39,6 +39,8 @@ class TodoRepository (private val todoDao: TodoDao) {
 
     suspend fun markIncomplete(id: Long) = todoDao.markIncomplete(id)
 
+    fun getCompletedTodos(): Flow<List<Todo>> = todoDao.getCompletedTodos()
+
     fun getTodosByPriority(): Flow<List<Todo>> =
         todoDao.getActiveTodosByPriority()
 
