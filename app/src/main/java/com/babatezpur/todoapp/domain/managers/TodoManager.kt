@@ -32,14 +32,8 @@ class TodoManager(private val todoRepository: TodoRepository) {
         }
     }
 
-    suspend fun getAllActiveTodosDirect(): Result<List<Todo>> {
-        return try {
-            val todos = todoRepository.getAllActiveTodosDirect()
-            Result.success(todos)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
+    // get completed todos
+    fun getCompletedTodos(): Flow<List<Todo>> = todoRepository.getCompletedTodos()
 
     suspend fun createTodo(
         title: String,

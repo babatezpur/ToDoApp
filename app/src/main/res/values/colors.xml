@@ -14,4 +14,8 @@
     <color name="priority_low_text">#1B5E20</color>     <!-- Dark green -->
 
     <color name="border_color">#E0E0E0</color>
+
+    <color name="priority_high_bg_muted">#FFE8E8</color>      <!-- Very light red -->
+    <color name="priority_medium_bg_muted">#FFF4E8</color>    <!-- Very light orange -->
+    <color name="priority_low_bg_muted">#E8F4E8</color>       <!-- Very light green -->
 </resources>
