@@ -198,7 +198,7 @@ class TodoManager(private val todoRepository: TodoRepository) {
             SortOption.CREATED_DESC -> "Newest First"
             SortOption.CREATED_ASC -> "Oldest First"
             SortOption.PRIORITY -> "Priority"
-            SortOption.DUE_DATE_ASC -> "Due Date (Earliest)"
+            SortOption.DUE_DATE_ASC -> "Due Date"
             SortOption.DUE_DATE_DESC -> "Due Date (Latest)"
         }
     }
