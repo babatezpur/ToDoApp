@@ -365,9 +365,9 @@ class TodoViewActivity : AppCompatActivity() {
                     true
                 }
                 R.id.menu_info -> {
-                    Log.d("TodoView", "Info clicked")
-//                    val intent = Intent(this, InfoActivity::class.java)
-//                    startActivity(intent)
+                    Log.d("TodoView", "Settings clicked")
+                    val intent = Intent(this, SettingsActivity::class.java)
+                    startActivity(intent)
                     true
                 }
                 else -> false

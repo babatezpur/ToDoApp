@@ -127,6 +127,21 @@ interface TodoDao {
     """)
     fun getActiveTodosSortedByDueDateDesc(): Flow<List<Todo>>
 
+    // 🗑️ BULK DELETE METHODS for Settings
 
+    @Query("DELETE FROM todos")
+    suspend fun deleteAllTodos()
+
+    @Query("DELETE FROM todos WHERE is_completed = 1")
+    suspend fun deleteAllCompletedTodos()
+
+    @Query("SELECT COUNT(*) FROM todos")
+    suspend fun getTotalTodosCount(): Int
+
+    @Query("SELECT COUNT(*) FROM todos WHERE is_completed = 1")
+    suspend fun getCompletedTodosCount(): Int
+
+    @Query("SELECT COUNT(*) FROM todos WHERE is_completed = 0")
+    suspend fun getActiveTodosCount(): Int
 
 }

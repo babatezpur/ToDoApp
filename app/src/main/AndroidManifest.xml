@@ -18,6 +18,9 @@
         android:theme="@style/Theme.ToDOApp"
         tools:targetApi="31">
         <activity
+            android:name=".ui.activities.SettingsActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.activities.CompletedTodosActivity"
             android:exported="false" />
         <activity

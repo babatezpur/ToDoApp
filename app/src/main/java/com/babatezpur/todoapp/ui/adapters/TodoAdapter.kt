@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Adapter
 import android.widget.CheckBox
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
@@ -12,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.babatezpur.todoapp.R
 import com.babatezpur.todoapp.data.entities.Priority
 import com.babatezpur.todoapp.data.entities.Todo
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 // Problem : todo disappears as soon as it is completed, we need to show the checked sign for a few seconds before removing it from the list
@@ -31,6 +33,7 @@ class TodoAdapter(
         val todoDescription: TextView = itemView.findViewById(R.id.todo_description)
         val todoDueDate: TextView = itemView.findViewById(R.id.todo_due_date)
         val checkBoxComplete: CheckBox = itemView.findViewById(R.id.checkbox_completed)
+        val iconOverdue: ImageView = itemView.findViewById(R.id.icon_overdue)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TodoViewHolder {
@@ -45,6 +48,9 @@ class TodoAdapter(
         holder.todoDescription.text = todo.description
         holder.todoDueDate.text = todo.dueDate.format(dateTimeFormatter).toString() // Format as needed
         holder.checkBoxComplete.isChecked = todo.isCompleted
+
+        handleOverdueStatus(holder, todo)
+
         // Set card background color based on priority
         setPriorityBackground(holder.cardView, todo.priority)
         holder.itemView.setOnClickListener {
@@ -95,5 +101,23 @@ class TodoAdapter(
         todoList.clear()
         todoList.addAll(newTodos)
         notifyDataSetChanged()
+    }
+
+    private fun handleOverdueStatus(holder: TodoViewHolder, todo: Todo) {
+        val isOverdue = todo.dueDate.isBefore(LocalDateTime.now()) && !todo.isCompleted
+
+        if (isOverdue) {
+            holder.iconOverdue.visibility = View.VISIBLE
+
+            holder.todoDueDate.setTextColor(
+                ContextCompat.getColor(holder.itemView.context, android.R.color.holo_red_dark)
+            )
+        } else {
+            holder.iconOverdue.visibility = View.GONE
+
+            holder.todoDueDate.setTextColor(
+                ContextCompat.getColor(holder.itemView.context, android.R.color.black)
+            )
+        }
     }
 }

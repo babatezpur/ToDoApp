@@ -86,5 +86,16 @@ class TodoRepository (private val todoDao: TodoDao) {
         }
     }
 
+    // 🗑️ BULK DELETE METHODS for Settings
+    suspend fun deleteAllTodos() = todoDao.deleteAllTodos()
+
+    suspend fun deleteAllCompletedTodos() = todoDao.deleteAllCompletedTodos()
+
+    // 📊 STATISTICS METHODS for Settings
+    suspend fun getTotalTodosCount(): Int = todoDao.getTotalTodosCount()
+
+    suspend fun getCompletedTodosCount(): Int = todoDao.getCompletedTodosCount()
+
+    suspend fun getActiveTodosCount(): Int = todoDao.getActiveTodosCount()
 
 }
