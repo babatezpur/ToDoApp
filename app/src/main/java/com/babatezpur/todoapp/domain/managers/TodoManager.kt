@@ -2,6 +2,7 @@ package com.babatezpur.todoapp.domain.managers
 
 import com.babatezpur.todoapp.data.entities.Priority
 import com.babatezpur.todoapp.data.entities.Todo
+import com.babatezpur.todoapp.data.entities.TodoStatistics
 import com.babatezpur.todoapp.data.repositories.TodoRepository
 import com.babatezpur.todoapp.domain.SortOption
 import kotlinx.coroutines.flow.Flow
@@ -119,6 +120,43 @@ class TodoManager(private val todoRepository: TodoRepository) {
         }
     }
 
+    // 🗑️ BULK DELETE METHODS for Settings
+    suspend fun deleteAllTodos(): Result<Unit> {
+        return try {
+            todoRepository.deleteAllTodos()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deleteAllCompletedTodos(): Result<Unit> {
+        return try {
+            todoRepository.deleteAllCompletedTodos()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun clearAllReminders(): Result<Unit> {
+        return try {
+            // Get all todos with reminders
+            val todos = todoRepository.getAllTodosDirect()
+
+            // Cancel each reminder
+            todos.forEach { todo ->
+                if (todo.reminderDateTime != null) {
+                    cancelNotification(todo.id)
+                }
+            }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     // Helper methods for notifications (TODO: implement later)
     private fun scheduleNotification(todoId: Long, title: String, reminderDateTime: LocalDateTime) {
         // TODO: Schedule notification using WorkManager or AlarmManager
@@ -233,6 +271,26 @@ class TodoManager(private val todoRepository: TodoRepository) {
         }
     }
 
+    // 📊 STATISTICS METHODS for Settings
+    suspend fun getTodoStatistics(): Result<TodoStatistics> {
+        return try {
+            val total = todoRepository.getTotalTodosCount()
+            val completed = todoRepository.getCompletedTodosCount()
+            val active = todoRepository.getActiveTodosCount()
+
+            val statistics = TodoStatistics(
+                totalTodos = total,
+                completedTodos = completed,
+                activeTodos = active,
+                completionRate = if (total > 0) (completed * 100) / total else 0
+            )
+
+            Result.success(statistics)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
 
 
 
@@ -255,7 +313,5 @@ class TodoManager(private val todoRepository: TodoRepository) {
             Result.failure(e)
         }
     }
-
-
 }
 
