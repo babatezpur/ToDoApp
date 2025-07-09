@@ -102,7 +102,7 @@ data class Todo(
 
 | Main Screen | Completed Todos | Add Todo | Sort Options |
 |-------------|----------------|----------|--------------|
-| ![Main]([screenshot1](https://github.com/babatezpur/ToDoApp/issues/5#issue-3214573184).png) | ![Completed](screenshot2.png) | ![Add](screenshot3.png) | ![Sort](screenshot4.png) |
+| ![Main]([screenshot1](https://github.com/babatezpur/ToDoApp/issues/5#issue-3214573184)) | ![Completed](screenshot2.png) | ![Add](screenshot3.png) | ![Sort](screenshot4.png) |
 
 *The app features a clean, Material Design interface with intuitive navigation and visual feedback*
 
